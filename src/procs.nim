@@ -1,4 +1,4 @@
-import httpclient, strutils, os
+import httpclient, parsexml, streams, strutils, os
 
 proc getFileExt(filePath: string): string =
   let strSplit = filePath.split('.')
@@ -21,7 +21,37 @@ proc downloadSitemap*(url: string): string =
     echo("unzipping")
     let status = execShellCmd("gunzip $1" % [localFile])
     if status != 0: quit("unzipping failed")
-    return localFile[.. ^4] # remove file ext
+    return localFile[0 .. ^4] # remove file ext
   else: quit("unknown extension $1" % [fileExt])
 
+proc scrapeSitemap*(filename: string, baseurl: string) =
+  var s = newFileStream(filename, fmRead)
+  if s == nil: quit("cannot open the file " & filename)
+  var x: XmlParser
+  open(x, s, filename)
+  var articles: seq[string]
+  while true:
+    x.next()
+    case x.kind
+    of xmlElementStart:
+      if cmpIgnoreCase(x.elementName, "loc") == 0:
+        var loc = ""
+        x.next()
+        while x.kind == xmlCharData:
+          loc.add(x.charData)
+          x.next()
+        if x.kind == xmlElementEnd and cmpIgnoreCase(x.elementName, "loc") == 0:
+          let article = getFileName(loc)
+          articles.add(article)
+        else:
+          echo(x.errorMsgExpected("/loc"))
+  
+    of xmlEof: break # end of file reached
+    else: discard # ignore other events
+  for article in articles:
+    let client = newHttpClient()
+    let url = "$1/Special:Export/$2" % [baseurl, article]
+    let localFile = article & ".xml"
+    echo("downloading " & localFile)
+    downloadFile(client, url, localFile)
 
