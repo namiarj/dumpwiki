@@ -5,4 +5,5 @@ let sitemap = cfg.getSectionvalue("mediawiki", "sitemap")
 let baseurl = cfg.getSectionvalue("mediawiki", "baseurl")
 
 let file = downloadSitemap(sitemap)
-scrapeSitemap(file, baseurl)
+let articles = importSitemap(file)
+downloadArticles(articles, baseurl)

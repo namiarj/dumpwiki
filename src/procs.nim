@@ -12,19 +12,18 @@ proc downloadSitemap*(url: string): string =
   let client = newHttpClient()
   let localFile = getFileName(url)
   downloadFile(client, url, localFile)
-  
   let fileExt = getFileExt(localFile)
   case fileExt
   of "xml":
     return localFile
   of "gz":
-    echo("unzipping")
+    echo("unzipping " & localFile)
     let status = execShellCmd("gunzip $1" % [localFile])
     if status != 0: quit("unzipping failed")
     return localFile[0 .. ^4] # remove file ext
   else: quit("unknown extension $1" % [fileExt])
 
-proc scrapeSitemap*(filename: string, baseurl: string) =
+proc importSitemap*(filename: string): seq[string] =
   var s = newFileStream(filename, fmRead)
   if s == nil: quit("cannot open the file " & filename)
   var x: XmlParser
@@ -47,11 +46,13 @@ proc scrapeSitemap*(filename: string, baseurl: string) =
           echo(x.errorMsgExpected("/loc"))
   
     of xmlEof: break # end of file reached
-    else: discard # ignore other events
+    else: discard
+  return articles
+
+proc downloadArticles*(articles: seq[string], baseurl: string) =
   for article in articles:
     let client = newHttpClient()
     let url = "$1/Special:Export/$2" % [baseurl, article]
     let localFile = article & ".xml"
-    echo("downloading " & localFile)
+    echo("downloading " & url)
     downloadFile(client, url, localFile)
-
