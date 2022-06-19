@@ -10,4 +10,3 @@ removeFile(file)
 
 for article in articles:
   file = downloadArticle(article, baseurl)
-  quit()
