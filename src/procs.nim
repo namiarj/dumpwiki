@@ -1,4 +1,4 @@
-import httpclient, parsexml, streams, strutils, os
+import httpclient, parsexml, streams, strutils, strformat, os
 
 proc getFileExt(filePath: string): string =
   let strSplit = filePath.split('.')
@@ -14,14 +14,12 @@ proc downloadSitemap*(url: string): string =
   downloadFile(client, url, localFile)
   let fileExt = getFileExt(localFile)
   case fileExt
-  of "xml":
-    return localFile
+  of "xml": return localFile
   of "gz":
-    echo("unzipping " & localFile)
-    let status = execShellCmd("gunzip $1" % [localFile])
+    let status = execShellCmd("gunzip " & localFile)
     if status != 0: quit("unzipping failed")
     return localFile[0 .. ^4] # remove file ext
-  else: quit("unknown extension $1" % [fileExt])
+  else: quit("unknown extension " & fileExt)
 
 proc importSitemap*(filename: string): seq[string] =
   var s = newFileStream(filename, fmRead)
@@ -44,15 +42,13 @@ proc importSitemap*(filename: string): seq[string] =
           articles.add(article)
         else:
           echo(x.errorMsgExpected("/loc"))
-  
     of xmlEof: break # end of file reached
     else: discard
   return articles
 
-proc downloadArticle*(article: string, baseurl: string): string =
+proc downloadArticle*(baseurl: string, article: string): string =
   let client = newHttpClient()
-  let url = "$1/Special:Export/$2" % [baseurl, article]
+  let url = fmt"{baseurl}/Special:Export/{article}"
   let localFile = article & ".xml"
-  echo("downloading " & url)
   downloadFile(client, url, localFile)
   return localFile

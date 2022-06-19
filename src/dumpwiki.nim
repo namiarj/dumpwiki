@@ -1,4 +1,5 @@
-import parsecfg, procs, os
+import parsecfg, strformat, os
+import procs
 
 let cfg = loadConfig("config.ini")
 let sitemap = cfg.getSectionvalue("mediawiki", "sitemap")
@@ -8,5 +9,8 @@ var file = downloadSitemap(sitemap)
 let articles = importSitemap(file)
 removeFile(file)
 
+var counter = 1
 for article in articles:
-  file = downloadArticle(article, baseurl)
+  echo(fmt"{counter}/{articles.len} {article}")
+  file = downloadArticle(baseurl, article)
+  counter.inc
