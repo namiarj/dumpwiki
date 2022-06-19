@@ -4,6 +4,10 @@ let cfg = loadConfig("config.ini")
 let sitemap = cfg.getSectionvalue("mediawiki", "sitemap")
 let baseurl = cfg.getSectionvalue("mediawiki", "baseurl")
 
-let file = downloadSitemap(sitemap)
+var file = downloadSitemap(sitemap)
 let articles = importSitemap(file)
-downloadArticles(articles, baseurl)
+removeFile(file)
+
+for article in articles:
+  file = downloadArticle(article, baseurl)
+  quit()

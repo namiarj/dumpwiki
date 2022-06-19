@@ -49,10 +49,10 @@ proc importSitemap*(filename: string): seq[string] =
     else: discard
   return articles
 
-proc downloadArticles*(articles: seq[string], baseurl: string) =
-  for article in articles:
-    let client = newHttpClient()
-    let url = "$1/Special:Export/$2" % [baseurl, article]
-    let localFile = article & ".xml"
-    echo("downloading " & url)
-    downloadFile(client, url, localFile)
+proc downloadArticle*(article: string, baseurl: string): string =
+  let client = newHttpClient()
+  let url = "$1/Special:Export/$2" % [baseurl, article]
+  let localFile = article & ".xml"
+  echo("downloading " & url)
+  downloadFile(client, url, localFile)
+  return localFile
