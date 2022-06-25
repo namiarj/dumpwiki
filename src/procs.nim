@@ -1,31 +1,32 @@
-import httpclient, parsexml, streams, strutils, strformat, os
-
-proc getFileExt(filePath: string): string =
-  let strSplit = filePath.split('.')
-  result = strSplit[strSplit.high]
+import httpclient, parsexml, streams, strformat, strutils, os
 
 proc getFileName(url: string): string =
-  let pathSplit = url.split('/')
-  result = pathSplit[pathSplit.high]
+  let split = url.split('/')
+  result = split[split.high]
 
-proc downloadSitemap*(url: string): string = 
-  let client = newHttpClient()
-  let localFile = getFileName(url)
-  downloadFile(client, url, localFile)
-  let fileExt = getFileExt(localFile)
+proc getFileExt(file: string): string =
+  let split = file.split('.')
+  result = split[split.high]
+
+proc fetchSitemap*(url: string): string = 
+  let 
+    client = newHttpClient()
+    file = getFileName(url)
+  downloadFile(client, url, file)
+  let fileExt = getFileExt(file)
   case fileExt
-  of "xml": return localFile
+  of "xml": return file
   of "gz":
-    let status = execShellCmd("gunzip " & localFile)
+    let status = execShellCmd("gunzip " & file)
     if status != 0: quit("unzipping failed")
-    return localFile[0 .. ^4] # remove file ext
+    return file[0 .. ^4] # remove file ext
   else: quit("unknown extension " & fileExt)
 
-proc importSitemap*(filename: string): seq[string] =
-  var s = newFileStream(filename, fmRead)
-  if s == nil: quit("cannot open the file " & filename)
+proc importSitemap*(file: string): seq[string] =
+  var s = newFileStream(file, fmRead)
+  if s == nil: quit("cannot open the file " & file)
   var x: XmlParser
-  open(x, s, filename)
+  open(x, s, file)
   var articles: seq[string]
   while true:
     x.next()
@@ -46,9 +47,10 @@ proc importSitemap*(filename: string): seq[string] =
     else: discard
   return articles
 
-proc downloadArticle*(baseurl: string, article: string): string =
-  let client = newHttpClient()
-  let url = fmt"{baseurl}/Special:Export/{article}"
-  let localFile = article & ".xml"
-  downloadFile(client, url, localFile)
-  return localFile
+proc fetchArticle*(baseurl: string, article: string): string =
+  let 
+    client = newHttpClient()
+    url = fmt"{baseurl}/Special:Export/{article}"
+    file = article & ".xml"
+  downloadFile(client, url, file)
+  return file
