@@ -47,7 +47,7 @@ proc importSitemap*(file: string): seq[string] =
     else: discard
   return articles
 
-proc fetchArticle*(baseurl: string, article: string): string =
+proc fetchArticle*(baseurl, article: string): string =
   let 
     client = newHttpClient()
     url = fmt"{baseurl}/Special:Export/{article}"
